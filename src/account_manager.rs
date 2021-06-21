@@ -1,4 +1,4 @@
-use crate::helper_types::{TransactionId, UserId};
+use crate::helper_types::{TransactionId, UserId, FLOAT_BASE};
 use crate::transaction::{Amount, Transaction};
 use std::collections::HashMap;
 use Transaction::{Chargeback, Deposit, Dispute, Resolve, Withdrawal};
@@ -142,5 +142,26 @@ impl AccountManager {
                 }
             });
         }
+    }
+}
+
+impl std::fmt::Display for AccountManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        writeln!(f, "client,available,held,total,locked")?;
+        for (user_id, account) in self.accounts.iter() {
+            writeln!(
+                f,
+                "{},{}.{},{}.{},{}.{},{}",
+                user_id,
+                account.available / FLOAT_BASE as i128,
+                account.available % FLOAT_BASE as i128,
+                account.held / FLOAT_BASE as i128,
+                account.held % FLOAT_BASE as i128,
+                account.total / FLOAT_BASE as i128,
+                account.total % FLOAT_BASE as i128,
+                account.locked
+            )?;
+        }
+        Ok(())
     }
 }
