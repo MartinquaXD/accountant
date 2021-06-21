@@ -24,6 +24,31 @@ struct TransactionRecord {
     state: DisputeState,
 }
 
+impl TransactionRecord {
+    pub fn new(transaction: Transaction) -> Self {
+        Self {
+            transaction,
+            state: DisputeState::Initial,
+        }
+    }
+
+    pub fn dispute(&mut self) {
+        assert_eq!(self.state, DisputeState::Initial);
+        self.state = DisputeState::Disputed
+    }
+
+    pub fn resolve(&mut self) {
+        assert_eq!(self.state, DisputeState::Disputed);
+        self.state = DisputeState::Resolved
+    }
+
+    pub fn chargeback(&mut self) {
+        assert_eq!(self.state, DisputeState::Disputed);
+        self.state = DisputeState::ChargedBack
+    }
+}
+
+
 #[derive(Clone, Debug, Default)]
 pub struct AccountManager {
     accounts: HashMap<UserId, Account>,
