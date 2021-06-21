@@ -132,3 +132,95 @@ fn test_convert_amount() {
     //used comma instead of point for decimal
     assert!("123123,12".parse::<Amount>().is_err());
 }
+
+#[test]
+fn test_create_deposit() {
+    assert_eq!(
+        Transaction::try_from(StringRecord::from(vec!["deposit", "12", "1", "123.0"])),
+        Ok(Transaction::Deposit {
+            user: 12,
+            tx: 1,
+            amount: Amount(1230000)
+        })
+    );
+    //amount has wrong format
+    assert!(Transaction::try_from(StringRecord::from(vec!["deposit", "12", "1", "123"])).is_err());
+    //user id has wrong format
+    assert!(
+        Transaction::try_from(StringRecord::from(vec!["deposit", "-1", "1", "123.0"])).is_err()
+    );
+    //user id has wrong format
+    assert!(
+        Transaction::try_from(StringRecord::from(vec!["deposit", "1", "-1", "123.0"])).is_err()
+    );
+    //some item is missing
+    assert!(Transaction::try_from(StringRecord::from(vec!["deposit", "12", "1"])).is_err());
+}
+
+#[test]
+fn test_create_withdrawal() {
+    assert_eq!(
+        Transaction::try_from(StringRecord::from(vec!["withdrawal", "12", "1", "123.0"])),
+        Ok(Transaction::Withdrawal {
+            user: 12,
+            tx: 1,
+            amount: Amount(1230000)
+        })
+    );
+    //amount has wrong format
+    assert!(
+        Transaction::try_from(StringRecord::from(vec!["withdrawal", "12", "1", "123"])).is_err()
+    );
+    //user id has wrong format
+    assert!(
+        Transaction::try_from(StringRecord::from(vec!["withdrawal", "-1", "1", "123.0"])).is_err()
+    );
+    //user id has wrong format
+    assert!(
+        Transaction::try_from(StringRecord::from(vec!["withdrawal", "1", "-1", "123.0"])).is_err()
+    );
+    //some item is missing
+    assert!(Transaction::try_from(StringRecord::from(vec!["withdrawal", "12", "1"])).is_err());
+}
+
+#[test]
+fn test_create_dispute() {
+    assert_eq!(
+        Transaction::try_from(StringRecord::from(vec!["dispute", "12", "1"])),
+        Ok(Transaction::Dispute { user: 12, tx: 1 })
+    );
+    //user id has wrong format
+    assert!(Transaction::try_from(StringRecord::from(vec!["dispute", "-1", "1"])).is_err());
+    //user id has wrong format
+    assert!(Transaction::try_from(StringRecord::from(vec!["dispute", "1", "-1"])).is_err());
+    //some item is missing
+    assert!(Transaction::try_from(StringRecord::from(vec!["dispute", "12"])).is_err());
+}
+
+#[test]
+fn test_create_resolve() {
+    assert_eq!(
+        Transaction::try_from(StringRecord::from(vec!["resolve", "12", "1"])),
+        Ok(Transaction::Resolve { user: 12, tx: 1 })
+    );
+    //user id has wrong format
+    assert!(Transaction::try_from(StringRecord::from(vec!["resolve", "-1", "1"])).is_err());
+    //user id has wrong format
+    assert!(Transaction::try_from(StringRecord::from(vec!["resolve", "1", "-1"])).is_err());
+    //some item is missing
+    assert!(Transaction::try_from(StringRecord::from(vec!["resolve", "12"])).is_err());
+}
+
+#[test]
+fn test_create_chargeback() {
+    assert_eq!(
+        Transaction::try_from(StringRecord::from(vec!["chargeback", "12", "1"])),
+        Ok(Transaction::Chargeback { user: 12, tx: 1 })
+    );
+    //user id has wrong format
+    assert!(Transaction::try_from(StringRecord::from(vec!["chargeback", "-1", "1"])).is_err());
+    //user id has wrong format
+    assert!(Transaction::try_from(StringRecord::from(vec!["chargeback", "1", "-1"])).is_err());
+    //some item is missing
+    assert!(Transaction::try_from(StringRecord::from(vec!["chargeback", "12"])).is_err());
+}
