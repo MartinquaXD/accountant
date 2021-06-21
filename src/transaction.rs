@@ -28,3 +28,20 @@ impl FromStr for Amount {
         ))
     }
 }
+
+#[test]
+fn test_convert_amount() {
+    assert_eq!(Amount(123456789), "12345.6789".parse::<Amount>().unwrap());
+    assert_eq!(Amount(123450789), "12345.0789".parse::<Amount>().unwrap());
+    assert_eq!(Amount(123455000), "12345.5".parse::<Amount>().unwrap());
+    assert_eq!(Amount(1), "0.0001".parse::<Amount>().unwrap());
+    //Too many decimal digits
+    assert!("12345.07891".parse::<Amount>().is_err());
+    //2 decimals
+    assert!("12345.07.0".parse::<Amount>().is_err());
+    //non digits included
+    assert!("asd12312.12".parse::<Amount>().is_err());
+    //used comma instead of point for decimal
+    assert!("123123,12".parse::<Amount>().is_err());
+}
+
