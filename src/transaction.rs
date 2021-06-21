@@ -1,4 +1,6 @@
-use crate::helper_types::{DECIMAL_PRECISION, FLOAT_BASE};
+use crate::helper_types::{TransactionId, UserId, DECIMAL_PRECISION, FLOAT_BASE};
+use csv::{StringRecord, StringRecordIter};
+use std::convert::TryFrom;
 use std::str::FromStr;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -29,6 +31,92 @@ impl FromStr for Amount {
     }
 }
 
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum Transaction {
+    Deposit {
+        user: UserId,
+        tx: TransactionId,
+        amount: Amount,
+    },
+    Withdrawal {
+        user: UserId,
+        tx: TransactionId,
+        amount: Amount,
+    },
+    Dispute {
+        user: UserId,
+        tx: TransactionId,
+    },
+    Resolve {
+        user: UserId,
+        tx: TransactionId,
+    },
+    Chargeback {
+        user: UserId,
+        tx: TransactionId,
+    },
+}
+
+impl Transaction {
+    fn try_create_deposit_transaction(mut it: StringRecordIter) -> Option<Self> {
+        Some(Self::Deposit {
+            user: it.next()?.parse().ok()?,
+            tx: it.next()?.parse().ok()?,
+            amount: it.next()?.parse().ok()?,
+        })
+    }
+
+    fn try_create_withdrawal_transaction(mut it: StringRecordIter) -> Option<Self> {
+        Some(Self::Withdrawal {
+            user: it.next()?.parse().ok()?,
+            tx: it.next()?.parse().ok()?,
+            amount: it.next()?.parse().ok()?,
+        })
+    }
+
+    fn try_create_dispute_transaction(mut it: StringRecordIter) -> Option<Self> {
+        Some(Self::Dispute {
+            user: it.next()?.parse().ok()?,
+            tx: it.next()?.parse().ok()?,
+        })
+    }
+
+    fn try_create_resolve_transaction(mut it: StringRecordIter) -> Option<Self> {
+        Some(Self::Resolve {
+            user: it.next()?.parse().ok()?,
+            tx: it.next()?.parse().ok()?,
+        })
+    }
+
+    fn try_create_chargeback_transaction(mut it: StringRecordIter) -> Option<Self> {
+        Some(Self::Chargeback {
+            user: it.next()?.parse().ok()?,
+            tx: it.next()?.parse().ok()?,
+        })
+    }
+}
+
+impl TryFrom<StringRecord> for Transaction {
+    type Error = &'static str;
+    fn try_from(mut row: StringRecord) -> Result<Self, Self::Error> {
+        row.trim();
+        let mut it = row.iter();
+        match it.next() {
+            Some("deposit") => Self::try_create_deposit_transaction(it)
+                .ok_or("wrong format for deposit transaction"),
+            Some("withdrawal") => Self::try_create_withdrawal_transaction(it)
+                .ok_or("wrong format for withdrawal transaction"),
+            Some("dispute") => Self::try_create_dispute_transaction(it)
+                .ok_or("wrong format for dispute transaction"),
+            Some("resolve") => Self::try_create_resolve_transaction(it)
+                .ok_or("wrong format for resolve transaction"),
+            Some("chargeback") => Self::try_create_chargeback_transaction(it)
+                .ok_or("wrong format for chargeback transaction"),
+            _ => Err("unknown transaction type"),
+        }
+    }
+}
+
 #[test]
 fn test_convert_amount() {
     assert_eq!(Amount(123456789), "12345.6789".parse::<Amount>().unwrap());
@@ -44,4 +132,3 @@ fn test_convert_amount() {
     //used comma instead of point for decimal
     assert!("123123,12".parse::<Amount>().is_err());
 }
-
